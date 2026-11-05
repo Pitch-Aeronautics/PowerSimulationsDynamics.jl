@@ -42,10 +42,13 @@ function _transform_all_lines!(sys::PSY.System)
 end
 
 function transform_ybus_to_rectangular(
-    ybus::SparseArrays.SparseMatrixCSC{Complex{Float32}, Int},
+    ybus::SparseArrays.SparseMatrixCSC{<:Complex, Int},
 )
     # TODO: Improve performance here
-    return hcat(vcat(real(ybus), -imag(ybus)), vcat(imag(ybus), real(ybus)))
+    # Stored in Float64 whatever PowerNetworkMatrices' element type (ComplexF32 upstream,
+    # ComplexF64 in Pitch's fork): widening is exact, narrowing would round the network.
+    y = SparseArrays.SparseMatrixCSC{ComplexF64, Int}(ybus)
+    return hcat(vcat(real(y), -imag(y)), vcat(imag(y), real(y)))
 end
 
 function transform_branches_to_dynamic(sys::PSY.System, ::Type{T}) where {T <: PSY.ACBranch}
